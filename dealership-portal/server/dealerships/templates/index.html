@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Home – Best Cars Dealership{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero text-center">
+  <div class="container">
+    <h1 class="display-4 fw-bold mb-3">Find Your Perfect Car</h1>
+    <p class="lead mb-4">Browse dealerships across the United States and read real customer reviews.</p>
+    <a href="#dealers" class="btn btn-primary btn-lg me-2">View Dealerships</a>
+    <a href="/about/" class="btn btn-outline-light btn-lg">Learn More</a>
+  </div>
+</section>
+
+<!-- Dealers Section -->
+<section id="dealers" class="py-5">
+  <div class="container">
+    <h2 class="mb-4">Dealerships</h2>
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <select id="state-filter" class="form-select">
+          <option value="All">Show All States</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100" onclick="filterDealers()">Filter</button>
+      </div>
+    </div>
+    <div id="dealers-table-wrap">
+      <table class="table table-hover table-bordered">
+        <thead class="table-dark">
+          <tr><th>#</th><th>Dealer Name</th><th>City</th><th>State</th><th>Zip</th><th>Action</th></tr>
+        </thead>
+        <tbody id="dealers-body">
+          <tr><td colspan="6" class="text-center">Loading dealers...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Login</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div id="login-error" class="alert alert-danger d-none"></div>
+        <input type="text" id="login-username" class="form-control mb-2" placeholder="Username"/>
+        <input type="password" id="login-password" class="form-control mb-2" placeholder="Password"/>
+        <button class="btn btn-primary w-100" onclick="doLogin()">Login</button>
+        <hr/>
+        <p class="text-center mb-0">No account? <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">Register</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal fade" id="registerModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Register</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div id="reg-error" class="alert alert-danger d-none"></div>
+        <input type="text" id="reg-username" class="form-control mb-2" placeholder="Username"/>
+        <input type="text" id="reg-firstname" class="form-control mb-2" placeholder="First Name"/>
+        <input type="text" id="reg-lastname" class="form-control mb-2" placeholder="Last Name"/>
+        <input type="email" id="reg-email" class="form-control mb-2" placeholder="Email"/>
+        <input type="password" id="reg-password" class="form-control mb-2" placeholder="Password"/>
+        <button class="btn btn-success w-100" onclick="doRegister()">Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const US_STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut",
+  "Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky",
+  "Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri",
+  "Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York",
+  "North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island",
+  "South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington",
+  "West Virginia","Wisconsin","Wyoming"];
+
+const sel = document.getElementById('state-filter');
+US_STATES.forEach(s => { const o = document.createElement('option'); o.value=s; o.text=s; sel.appendChild(o); });
+
+function renderDealers(dealers) {
+  const tbody = document.getElementById('dealers-body');
+  const user = sessionStorage.getItem('username');
+  if (!dealers.length) { tbody.innerHTML='<tr><td colspan="6" class="text-center">No dealers found.</td></tr>'; return; }
+  tbody.innerHTML = dealers.map((d,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td><a href="/dealer/${d.id}/">${d.full_name}</a></td>
+      <td>${d.city}</td><td>${d.state}</td><td>${d.zip}</td>
+      <td>${user ? `<a href="/add_review/${d.id}/" class="btn btn-sm btn-success">Review</a>` : '<span class="text-muted">Login to review</span>'}</td>
+    </tr>`).join('');
+}
+
+function filterDealers() {
+  const state = document.getElementById('state-filter').value;
+  const url = state === 'All' ? '/api/get_dealers/' : `/api/get_dealers/${state}/`;
+  fetch(url).then(r=>r.json()).then(data=>renderDealers(data.dealers||[]));
+}
+
+// Initial load
+filterDealers();
+
+// Handle hash-based modal open
+if (location.hash === '#login') new bootstrap.Modal(document.getElementById('loginModal')).show();
+if (location.hash === '#register') new bootstrap.Modal(document.getElementById('registerModal')).show();
+
+function doLogin() {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  fetch('/api/login/', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({userName: username, password})
+  }).then(r=>r.json()).then(data=>{
+    if (data.status === 'Authenticated') {
+      sessionStorage.setItem('username', data.userName);
+      location.reload();
+    } else {
+      const el = document.getElementById('login-error');
+      el.textContent = 'Invalid credentials'; el.classList.remove('d-none');
+    }
+  });
+}
+
+function doRegister() {
+  fetch('/api/register/', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      userName: document.getElementById('reg-username').value,
+      firstName: document.getElementById('reg-firstname').value,
+      lastName: document.getElementById('reg-lastname').value,
+      email: document.getElementById('reg-email').value,
+      password: document.getElementById('reg-password').value,
+    })
+  }).then(r=>r.json()).then(data=>{
+    if (data.status === 'Authenticated') {
+      sessionStorage.setItem('username', data.userName);
+      location.reload();
+    } else {
+      const el = document.getElementById('reg-error');
+      el.textContent = data.error || 'Registration failed'; el.classList.remove('d-none');
+    }
+  });
+}
+</script>
+{% endblock %}

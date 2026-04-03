@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Contact Us – Best Cars Dealership{% endblock %}
+
+{% block content %}
+<section class="hero text-center py-5">
+  <div class="container">
+    <h1 class="display-5 fw-bold">Contact Us</h1>
+    <p class="lead">We'd love to hear from you. Reach out anytime.</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-md-6">
+        <h3 class="mb-4">Send Us a Message</h3>
+        <div id="contact-success" class="alert alert-success d-none">Message sent! We'll get back to you soon.</div>
+        <form id="contact-form">
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" placeholder="John Doe" required/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" placeholder="john@example.com" required/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Subject</label>
+            <input type="text" class="form-control" placeholder="How can we help?"/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea class="form-control" rows="5" placeholder="Your message..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary px-4">Send Message</button>
+        </form>
+      </div>
+
+      <div class="col-md-6">
+        <h3 class="mb-4">Our Offices</h3>
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-body">
+            <h5><i class="fas fa-map-marker-alt text-primary me-2"></i>Headquarters</h5>
+            <p class="text-muted mb-1">1234 Auto Drive, Suite 100<br/>New York, NY 10001</p>
+            <p class="text-muted mb-1"><i class="fas fa-phone me-2"></i>+1 (800) 555-0100</p>
+            <p class="text-muted mb-0"><i class="fas fa-envelope me-2"></i>info@bestcars.com</p>
+          </div>
+        </div>
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-body">
+            <h5><i class="fas fa-map-marker-alt text-success me-2"></i>West Coast Office</h5>
+            <p class="text-muted mb-1">5678 Pacific Blvd<br/>Los Angeles, CA 90001</p>
+            <p class="text-muted mb-1"><i class="fas fa-phone me-2"></i>+1 (800) 555-0200</p>
+            <p class="text-muted mb-0"><i class="fas fa-envelope me-2"></i>west@bestcars.com</p>
+          </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <h5 class="mb-3">Business Hours</h5>
+            <table class="table table-sm mb-0">
+              <tr><td>Monday – Friday</td><td class="text-end">9:00 AM – 6:00 PM</td></tr>
+              <tr><td>Saturday</td><td class="text-end">10:00 AM – 4:00 PM</td></tr>
+              <tr><td>Sunday</td><td class="text-end text-muted">Closed</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('contact-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  document.getElementById('contact-success').classList.remove('d-none');
+  this.reset();
+});
+</script>
+{% endblock %}

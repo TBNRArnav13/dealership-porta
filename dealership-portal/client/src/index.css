@@ -1,0 +1,8 @@
+body { font-family: 'Segoe UI', sans-serif; }
+.hero { background: linear-gradient(135deg, #1a1a2e, #0f3460); color: white; padding: 80px 0; }
+.card { transition: transform .2s; }
+.card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.sentiment-positive { color: #198754; font-weight: 600; }
+.sentiment-negative { color: #dc3545; font-weight: 600; }
+.sentiment-neutral  { color: #6c757d; font-weight: 600; }
+footer { background: #1a1a2e; color: #ccc; }

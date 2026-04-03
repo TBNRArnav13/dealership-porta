@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Dealer Details – Best Cars{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div id="dealer-info" class="mb-4">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+  <div id="reviews-section" class="d-none">
+    <h3 class="mb-3">Customer Reviews</h3>
+    <div id="reviews-list" class="row g-3"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const dealerId = {{ dealer_id }};
+const user = sessionStorage.getItem('username');
+
+fetch(`/api/get_dealer/${dealerId}/`)
+  .then(r=>r.json())
+  .then(data=>{
+    const d = Array.isArray(data.dealer) ? data.dealer[0] : data.dealer;
+    document.getElementById('dealer-info').innerHTML = `
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h2>${d.full_name}</h2>
+              <p class="text-muted mb-1"><i class="fas fa-map-marker-alt me-2"></i>${d.address}, ${d.city}, ${d.state} ${d.zip}</p>
+              <p class="text-muted mb-0"><i class="fas fa-phone me-2"></i>${d.phone || 'N/A'}</p>
+            </div>
+            ${user ? `<a href="/add_review/${dealerId}/" class="btn btn-success"><i class="fas fa-pen me-2"></i>Write a Review</a>` : ''}
+          </div>
+        </div>
+      </div>`;
+  });
+
+fetch(`/api/get_reviews/${dealerId}/`)
+  .then(r=>r.json())
+  .then(data=>{
+    const reviews = data.reviews || [];
+    const sec = document.getElementById('reviews-section');
+    sec.classList.remove('d-none');
+    if (!reviews.length) {
+      document.getElementById('reviews-list').innerHTML = '<p class="text-muted">No reviews yet. Be the first!</p>';
+      return;
+    }
+    document.getElementById('reviews-list').innerHTML = reviews.map(r=>`
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <strong>${r.name}</strong>
+              <small class="text-muted">${r.purchase_date || ''}</small>
+            </div>
+            <p class="card-text">${r.review}</p>
+            ${r.purchase ? `<small class="text-success"><i class="fas fa-check-circle me-1"></i>Verified Purchase – ${r.car_make} ${r.car_model} (${r.car_year})</small>` : ''}
+            <div class="mt-2">
+              <span class="sentiment-${r.sentiment || 'neutral'}">
+                <i class="fas fa-circle-dot me-1"></i>${(r.sentiment||'neutral').charAt(0).toUpperCase()+(r.sentiment||'neutral').slice(1)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>`).join('');
+  });
+</script>
+{% endblock %}

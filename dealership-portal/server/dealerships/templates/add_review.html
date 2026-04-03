@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Add Review – Best Cars{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:700px">
+  <h2 class="mb-4">Write a Review</h2>
+  <div id="review-error" class="alert alert-danger d-none"></div>
+  <form id="review-form" class="card shadow-sm p-4">
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Your Review</label>
+      <textarea id="review-text" class="form-control" rows="4" placeholder="Share your experience..." required></textarea>
+    </div>
+    <div class="mb-3 form-check">
+      <input type="checkbox" class="form-check-input" id="purchase-check"/>
+      <label class="form-check-label" for="purchase-check">I purchased a vehicle here</label>
+    </div>
+    <div id="purchase-details" class="d-none">
+      <div class="mb-3">
+        <label class="form-label">Purchase Date</label>
+        <input type="date" id="purchase-date" class="form-control"/>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Car Make</label>
+          <select id="car-make" class="form-select"><option value="">Select Make</option></select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Car Model</label>
+          <select id="car-model" class="form-select"><option value="">Select Model</option></select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Year</label>
+          <select id="car-year" class="form-select">
+            <option value="">Select Year</option>
+            {% for y in years %}<option value="{{ y }}">{{ y }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary px-4">Submit Review</button>
+      <a href="/dealer/{{ dealer_id }}/" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const dealerId = {{ dealer_id }};
+const username = sessionStorage.getItem('username');
+if (!username) location.href = '/#login';
+
+// Load car makes
+fetch('/api/get_cars/').then(r=>r.json()).then(data=>{
+  const sel = document.getElementById('car-make');
+  (data.CarMakes||[]).forEach(m=>{
+    const o = document.createElement('option'); o.value=m.name; o.text=m.name; sel.appendChild(o);
+  });
+});
+
+// Load car models on make change
+document.getElementById('car-make').addEventListener('change', function() {
+  fetch('/api/get_car_models/').then(r=>r.json()).then(data=>{
+    const sel = document.getElementById('car-model');
+    sel.innerHTML = '<option value="">Select Model</option>';
+    (data.CarModels||[]).filter(m=>m.car_make__name===this.value).forEach(m=>{
+      const o = document.createElement('option'); o.value=m.name; o.text=m.name; sel.appendChild(o);
+    });
+  });
+});
+
+document.getElementById('purchase-check').addEventListener('change', function() {
+  document.getElementById('purchase-details').classList.toggle('d-none', !this.checked);
+});
+
+document.getElementById('review-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const purchased = document.getElementById('purchase-check').checked;
+  const payload = {
+    user_id: 1,
+    name: username,
+    dealership: dealerId,
+    review: document.getElementById('review-text').value,
+    purchase: purchased,
+    purchase_date: purchased ? document.getElementById('purchase-date').value : '',
+    car_make: purchased ? document.getElementById('car-make').value : '',
+    car_model: purchased ? document.getElementById('car-model').value : '',
+    car_year: purchased ? parseInt(document.getElementById('car-year').value) || 0 : 0,
+  };
+  fetch('/api/add_review/', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).then(r=>r.json()).then(data=>{
+    if (data.status === 200) location.href = `/dealer/${dealerId}/`;
+    else {
+      const el = document.getElementById('review-error');
+      el.textContent = data.message || 'Failed to submit review'; el.classList.remove('d-none');
+    }
+  });
+});
+</script>
+{% endblock %}
